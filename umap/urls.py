@@ -80,6 +80,11 @@ i18n_urls += decorated_patterns(
         views.DataLayerVersion.as_view(),
         name="datalayer_version",
     ),
+    re_path(
+        r"^datalayer/download/(?P<pk>[\d]+)$",
+        views.DataLayerDownloadVersion.as_view(),
+        name="datalayer_download",
+    ),
 )
 i18n_urls += decorated_patterns(
     [ensure_csrf_cookie],

@@ -721,6 +721,7 @@ class DataLayerView(GZipMixin, BaseDetailView):
                 response = HttpResponse(f.read(), content_type="application/geo+json")
             response["Last-Modified"] = self.last_modified
             response["Content-Length"] = statobj.st_size
+
         return response
 
 
@@ -731,6 +732,29 @@ class DataLayerVersion(DataLayerView):
             root=settings.MEDIA_ROOT,
             path=self.object.get_version_path(self.kwargs["name"]),
         )
+    
+class DataLayerDownloadVersion(DataLayerView):
+    def render_to_response(self, context, **response_kwargs):
+        supported_types = {
+            'geojson': 'application/geo+json',
+            'gzip': 'application/gzip'
+        }
+        
+        ext = self.request.GET.get('ext', 'geojson')
+        
+        if ext not in supported_types:
+            raise ValueError('Unsupported file type: {}'.format(ext))
+        
+        file_path = self.path + ('.gz' if ext == 'gzip' else '')
+        content_type = supported_types[ext]
+        
+        with open(file_path, 'rb') as f:
+            response = HttpResponse(f, content_type=content_type)
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        
+        return response
+
+        
 
 
 class DataLayerCreate(FormLessEditMixin, GZipMixin, CreateView):
